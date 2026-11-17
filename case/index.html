@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="nl-BE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Case: douane-intake · Bruce · Automatisering</title>
+  <meta name="description" content="Een prototype dat factuur en paklijst leest, GN-codes voorstelt, ontbrekende gegevens opspoort en één mail naar de klant opstelt. Getest op een fictieve zending.">
+  <link rel="alternate" hreflang="nl-BE" href="./">
+  <link rel="alternate" hreflang="en" href="../en/case/">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a class="brand" href="../">Bruce · Automatisering</a>
+      <nav>
+        <a class="nav-link" href="../#pakketten">Pakketten</a>
+        <a class="nav-link" href="../#werkwijze">Werkwijze</a>
+        <a class="nav-link" href="../#contact">Contact</a>
+        <div class="lang" aria-label="Taal">
+          <span aria-current="true">NL</span>
+          <a href="../en/case/" hreflang="en" lang="en">EN</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero hero-case">
+      <div class="wrap">
+        <span class="eyebrow">Case · Douane-intake · Prototype</span>
+        <h1>Van factuur en paklijst naar één mail met alle open vragen.</h1>
+        <p class="lead">Ik bouwde een tool voor douanedeclaranten. Op een fictieve importzending uit China las hij factuur en paklijst, stelde hij GN-codes voor vijf lijnen voor, vond hij negen open punten (waaronder een verschil in aantal dozen tussen de twee documenten) en schreef hij één mail met acht vragen voor de klant.</p>
+        <dl class="facts">
+          <div><dt>Invoer</dt><dd>Handelsfactuur (PDF) en paklijst</dd></div>
+          <div><dt>Uitvoer</dt><dd>GN-codevoorstellen, checklist, mail aan de klant</dd></div>
+          <div><dt>Status</dt><dd>Werkend prototype, getest op fictieve zendingen</dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <section>
+      <div class="wrap narrow">
+        <h2>Het probleem</h2>
+        <p>Ik werkte drie jaar in de douane-afdeling van UPS in Diegem. Wat ik daar elke dag zag: een declarant opent een nieuwe zending, merkt dat het EORI-nummer ontbreekt, mailt de klant, krijgt antwoord, ziet dan pas dat de vrachtkost niet op de FOB-factuur staat, en mailt opnieuw. Elke ronde kost een dag. Daarnaast moet elke goederenlijn een GN-code krijgen, en bij een vage omschrijving begint het zoeken.</p>
+        <p>Het doel: alles wat ontbreekt in één keer vinden, en de klant één keer mailen.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap narrow">
+        <h2>Aanpak</h2>
+        <ol class="steps steps-tight">
+          <li><strong>Documenten lezen</strong><span>Factuur en paklijst, als PDF of tekst. Ook scans.</span></li>
+          <li><strong>Gegevens uithalen</strong><span>Partijen, Incoterm, waarden, gewichten, oorsprong per lijn, en waar de documenten elkaar tegenspreken.</span></li>
+          <li><strong>GN-codes voorstellen</strong><span>Tot drie codes per lijn, met de redenering en een link naar TARIC.</span></li>
+          <li><strong>Checklist en mail</strong><span>Vaste regels voor wat een invoeraangifte nodig heeft, en één conceptmail met alle vragen.</span></li>
+        </ol>
+        <p>Drie keuzes die ik bewust maakte:</p>
+        <ul class="plain">
+          <li><strong>Voorstellen, geen beslissingen.</strong> De tool dient niets in. De declarant controleert elke code in TARIC.</li>
+          <li><strong>Vragen in plaats van gokken.</strong> Als de code afhangt van een ontbrekend feit (porselein of steengoed?), staat die vraag in de mail.</li>
+          <li><strong>De checklist is gewone code.</strong> Wat verplicht is, staat in eenvoudige regels die je kunt aanpassen zonder aan de AI te komen.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap narrow">
+        <h2>Wat de tool opleverde</h2>
+        <p>Hieronder echte uitvoer van de tool op de testzending: vijf goederenlijnen, FOB Shanghai, met fouten die er bewust in zaten. Alle bedrijven en nummers zijn fictief. De tool schrijft voorlopig in het Engels.</p>
+
+        <figure class="output">
+          <div class="output-bar"><span></span><span></span><span></span><em>Checklist · DEMO-1187</em></div>
+          <div class="output-body">
+            <p class="output-title">9 open items before the declaration can be filed</p>
+            <ul class="checklist">
+              <li class="open"><b>Consignee EORI</b> No EORI number for the consignee.</li>
+              <li class="open"><b>Freight cost to EU border</b> Incoterm FOB excludes international freight; it must be added to the customs value.</li>
+              <li class="open"><b>Transport document</b> No B/L, AWB or CMR number found.</li>
+              <li class="open"><b>Line 4 (Ceramic mugs)</b> Missing country of origin.</li>
+              <li class="check"><b>Documents disagree</b> The invoice states 24 cartons, but the packing list totals 26 cartons (4+8+5+8+1).</li>
+              <li class="check"><b>Line 5 (Accessories)</b> Description is too vague to classify.</li>
+              <li class="ok"><b>Line 1 (Chef knives)</b> Suggested 8211 92 00 (high confidence)</li>
+              <li class="ok"><b>Line 2 (Cotton T-shirts)</b> Suggested 6109 10 00 (high confidence)</li>
+            </ul>
+          </div>
+          <figcaption>Een deel van de checklist. Rood moet opgelost worden, oranje vraagt een controle, groen is in orde.</figcaption>
+        </figure>
+
+        <figure class="output">
+          <div class="output-bar"><span></span><span></span><span></span><em>HS suggestions · Line 4</em></div>
+          <div class="output-body">
+            <p class="output-title">Ceramic mugs 350 ml · 800 pcs · origin: missing</p>
+            <p class="code"><b>6911 10 00</b> <i class="conf mid">medium</i> Tableware of porcelain or china.</p>
+            <p class="code"><b>6912 00 23</b> <i class="conf mid">medium</i> Ceramic tableware other than porcelain: stoneware. <span class="warn">If the mugs are from China, EU anti-dumping duties on ceramic tableware apply (Reg. (EU) 2019/1198). Confirm origin and producer.</span></p>
+            <p class="code"><b>6912 00 25</b> <i class="conf low">low</i> Earthenware or fine pottery.</p>
+            <p class="ask">To decide: are the mugs porcelain, stoneware or earthenware?</p>
+          </div>
+          <figcaption>Bij twijfel geeft de tool alternatieven, wijst op antidumpingrechten en zegt welke vraag de code beslist.</figcaption>
+        </figure>
+
+        <figure class="output">
+          <div class="output-bar"><span></span><span></span><span></span><em>Draft email to client</em></div>
+          <div class="output-body">
+<pre>Subject: Customs clearance DEMO-1187: information needed
+
+We are preparing the import declaration for invoice
+DEMO-1187. Before we can file it, we need the following:
+
+1. What is your EORI number?
+2. Could you send the freight invoice for transport up
+   to the EU border?
+3. Were the goods insured for transport? If so, what
+   was the premium?
+4. Could you send the bill of lading for this shipment?
+5. For "Ceramic mugs 350 ml": what is the country of
+   origin?
+6. Are the mugs porcelain, stoneware or earthenware?
+7. What exactly are the "Accessories", and what does
+   one set contain?
+8. The invoice states 24 cartons, the packing list 26.
+   Which is correct?</pre>
+          </div>
+          <figcaption>Eén mail met alle vragen, klaar om na te lezen en te versturen. Licht ingekort.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap narrow">
+        <h2>Resultaat op de testzending</h2>
+        <div class="why">
+          <div><strong>3 van 5 lijnen</strong><span>kregen een code met hoge zekerheid. Bij de messen kwam die overeen met de code op de factuur.</span></div>
+          <div><strong>9 open punten</strong><span>gevonden, waaronder het verschil van 24 tegen 26 dozen tussen factuur en paklijst.</span></div>
+          <div><strong>1 risico gemarkeerd</strong><span>Mogelijke antidumpingrechten op keramiek uit China, net op de lijn waar de oorsprong ontbrak.</span></div>
+          <div><strong>1 mail, 8 vragen</strong><span>in één keer, in plaats van een nieuwe mail per ontbrekend stuk.</span></div>
+        </div>
+        <p class="note">Een tweede testzending (een bijna volledige factuur uit het VK, DAP Antwerpen) gaf één open vraag: is de plaid een deken of een sprei? Dat bepaalt de code.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap narrow">
+        <h2>Wat nog moet</h2>
+        <p>Eerlijk: dit is een prototype. Het zag tot nu toe alleen fictieve zendingen. De volgende stap is testen op echte, geanonimiseerde dossiers samen met een declarant, om te meten hoe vaak de codes kloppen en hoeveel tijd het per dossier bespaart. Mails in het Nederlands en Frans staan ook op de lijst.</p>
+        <p class="disclaimer">De GN-codes zijn voorstellen om in TARIC te controleren. De tool dient geen aangiftes in en vervangt de declarant niet.</p>
+      </div>
+    </section>
+
+    <section id="contact">
+      <div class="wrap narrow">
+        <div class="contact">
+          <h2>Test het op je eigen zending</h2>
+          <p class="section-intro">Stuur een geanonimiseerde factuur en paklijst. Ik draai ze gratis door de tool en toon je wat eruit komt.</p>
+          <a class="btn" href="../#contact">Neem contact op</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">© 2026 Bruce · Automatisering · België</div>
+  </footer>
+</body>
+</html>
