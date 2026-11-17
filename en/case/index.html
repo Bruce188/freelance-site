@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Case: customs intake · Bruce · Automation</title>
+  <meta name="description" content="A prototype that reads an invoice and packing list, suggests CN codes, finds missing data and drafts one email to the client. Tested on a fictitious shipment.">
+  <link rel="alternate" hreflang="nl-BE" href="../../case/">
+  <link rel="alternate" hreflang="en" href="./">
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <a class="brand" href="../">Bruce · Automation</a>
+      <nav>
+        <a class="nav-link" href="../#packages">Packages</a>
+        <a class="nav-link" href="../#process">Process</a>
+        <a class="nav-link" href="../#contact">Contact</a>
+        <div class="lang" aria-label="Language">
+          <a href="../../case/" hreflang="nl-BE" lang="nl-BE">NL</a>
+          <span aria-current="true">EN</span>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero hero-case">
+      <div class="wrap">
+        <span class="eyebrow">Case · Customs intake · Prototype</span>
+        <h1>From invoice and packing list to one email with every open question.</h1>
+        <p class="lead">I built a tool for customs declarants. On a fictitious import shipment from China it read the invoice and packing list, suggested CN codes for five lines, found nine open items (including a carton count that differs between the two documents) and wrote one email with eight questions for the client.</p>
+        <dl class="facts">
+          <div><dt>Input</dt><dd>Commercial invoice (PDF) and packing list</dd></div>
+          <div><dt>Output</dt><dd>CN code suggestions, checklist, email to the client</dd></div>
+          <div><dt>Status</dt><dd>Working prototype, tested on fictitious shipments</dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <section>
+      <div class="wrap narrow">
+        <h2>The problem</h2>
+        <p>I spent three years in UPS's customs brokerage team in Diegem. What I saw every day: a declarant opens a new shipment, notices the EORI number is missing, emails the client, gets an answer, only then sees that freight is not on the FOB invoice, and emails again. Every round costs a day. On top of that, every goods line needs a CN code, and a vague description means searching.</p>
+        <p>The goal: find everything that is missing in one pass, and email the client once.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap narrow">
+        <h2>Approach</h2>
+        <ol class="steps steps-tight">
+          <li><strong>Read the documents</strong><span>Invoice and packing list, as PDF or text. Scans too.</span></li>
+          <li><strong>Extract the data</strong><span>Parties, Incoterm, values, weights, origin per line, and where the documents contradict each other.</span></li>
+          <li><strong>Suggest CN codes</strong><span>Up to three codes per line, with the reasoning and a link to TARIC.</span></li>
+          <li><strong>Checklist and email</strong><span>Fixed rules for what an import declaration needs, and one draft email with all the questions.</span></li>
+        </ol>
+        <p>Three deliberate choices:</p>
+        <ul class="plain">
+          <li><strong>Suggestions, not decisions.</strong> The tool files nothing. The declarant checks every code in TARIC.</li>
+          <li><strong>Ask instead of guess.</strong> When the code depends on a missing fact (porcelain or stoneware?), that question goes in the email.</li>
+          <li><strong>The checklist is plain code.</strong> What is required lives in simple rules you can change without touching the AI.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap narrow">
+        <h2>What the tool produced</h2>
+        <p>Below is real output from the tool on the test shipment: five goods lines, FOB Shanghai, with errors put in on purpose. All companies and numbers are fictitious.</p>
+
+        <figure class="output">
+          <div class="output-bar"><span></span><span></span><span></span><em>Checklist · DEMO-1187</em></div>
+          <div class="output-body">
+            <p class="output-title">9 open items before the declaration can be filed</p>
+            <ul class="checklist">
+              <li class="open"><b>Consignee EORI</b> No EORI number for the consignee.</li>
+              <li class="open"><b>Freight cost to EU border</b> Incoterm FOB excludes international freight; it must be added to the customs value.</li>
+              <li class="open"><b>Transport document</b> No B/L, AWB or CMR number found.</li>
+              <li class="open"><b>Line 4 (Ceramic mugs)</b> Missing country of origin.</li>
+              <li class="check"><b>Documents disagree</b> The invoice states 24 cartons, but the packing list totals 26 cartons (4+8+5+8+1).</li>
+              <li class="check"><b>Line 5 (Accessories)</b> Description is too vague to classify.</li>
+              <li class="ok"><b>Line 1 (Chef knives)</b> Suggested 8211 92 00 (high confidence)</li>
+              <li class="ok"><b>Line 2 (Cotton T-shirts)</b> Suggested 6109 10 00 (high confidence)</li>
+            </ul>
+          </div>
+          <figcaption>Part of the checklist. Red must be resolved, amber needs a check, green is fine.</figcaption>
+        </figure>
+
+        <figure class="output">
+          <div class="output-bar"><span></span><span></span><span></span><em>HS suggestions · Line 4</em></div>
+          <div class="output-body">
+            <p class="output-title">Ceramic mugs 350 ml · 800 pcs · origin: missing</p>
+            <p class="code"><b>6911 10 00</b> <i class="conf mid">medium</i> Tableware of porcelain or china.</p>
+            <p class="code"><b>6912 00 23</b> <i class="conf mid">medium</i> Ceramic tableware other than porcelain: stoneware. <span class="warn">If the mugs are from China, EU anti-dumping duties on ceramic tableware apply (Reg. (EU) 2019/1198). Confirm origin and producer.</span></p>
+            <p class="code"><b>6912 00 25</b> <i class="conf low">low</i> Earthenware or fine pottery.</p>
+            <p class="ask">To decide: are the mugs porcelain, stoneware or earthenware?</p>
+          </div>
+          <figcaption>When in doubt, the tool gives alternatives, flags anti-dumping duties and names the question that settles the code.</figcaption>
+        </figure>
+
+        <figure class="output">
+          <div class="output-bar"><span></span><span></span><span></span><em>Draft email to client</em></div>
+          <div class="output-body">
+<pre>Subject: Customs clearance DEMO-1187: information needed
+
+We are preparing the import declaration for invoice
+DEMO-1187. Before we can file it, we need the following:
+
+1. What is your EORI number?
+2. Could you send the freight invoice for transport up
+   to the EU border?
+3. Were the goods insured for transport? If so, what
+   was the premium?
+4. Could you send the bill of lading for this shipment?
+5. For "Ceramic mugs 350 ml": what is the country of
+   origin?
+6. Are the mugs porcelain, stoneware or earthenware?
+7. What exactly are the "Accessories", and what does
+   one set contain?
+8. The invoice states 24 cartons, the packing list 26.
+   Which is correct?</pre>
+          </div>
+          <figcaption>One email with every question, ready to review and send. Slightly shortened.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap narrow">
+        <h2>Result on the test shipment</h2>
+        <div class="why">
+          <div><strong>3 of 5 lines</strong><span>got a high-confidence code. For the knives it matched the code on the invoice.</span></div>
+          <div><strong>9 open items</strong><span>found, including the 24 versus 26 cartons between invoice and packing list.</span></div>
+          <div><strong>1 risk flagged</strong><span>Possible anti-dumping duties on ceramics from China, on exactly the line where origin was missing.</span></div>
+          <div><strong>1 email, 8 questions</strong><span>in one go, instead of a new email for each missing piece.</span></div>
+        </div>
+        <p class="note">A second test shipment (a nearly complete UK invoice, DAP Antwerp) gave one open question: is the throw a blanket or a bedspread? That decides the code.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap narrow">
+        <h2>What is still to do</h2>
+        <p>To be clear: this is a prototype. So far it has only seen fictitious shipments. The next step is testing on real, anonymised files together with a declarant, to measure how often the codes are right and how much time it saves per file. Emails in Dutch and French are on the list too.</p>
+        <p class="disclaimer">The CN codes are suggestions to verify in TARIC. The tool does not file declarations and does not replace the declarant.</p>
+      </div>
+    </section>
+
+    <section id="contact">
+      <div class="wrap narrow">
+        <div class="contact">
+          <h2>Try it on your own shipment</h2>
+          <p class="section-intro">Send an anonymised invoice and packing list. I'll run them through the tool for free and show you what comes out.</p>
+          <a class="btn" href="../#contact">Get in touch</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">© 2026 Bruce · Automation · Belgium</div>
+  </footer>
+</body>
+</html>
